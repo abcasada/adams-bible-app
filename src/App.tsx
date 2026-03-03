@@ -4,6 +4,7 @@ import { getBookById, getNextChapter, getPrevChapter } from './data/books';
 import { hasApiKey, fetchTranslations, fetchChapter } from './lib/api';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useBookmarks } from './hooks/useBookmarks';
+import { useFavoriteTranslations } from './hooks/useFavoriteTranslations';
 
 import ApiKeySetup from './components/ApiKeySetup';
 import Header from './components/Header';
@@ -12,6 +13,7 @@ import BookChapterSelector from './components/BookChapterSelector';
 import TranslationSelector from './components/TranslationSelector';
 import BookmarkPanel from './components/BookmarkPanel';
 import ChapterNav from './components/ChapterNav';
+import SettingsPanel from './components/SettingsPanel';
 
 const LAST_LOC_KEY = 'bible-app-last-location';
 
@@ -39,6 +41,7 @@ function saveLastLocation(loc: LastLocation) {
 export default function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const { bookmarks, addBookmark, updateBookmark, deleteBookmark, autoAdvance } = useBookmarks();
+  const { favoriteIds, toggleFavorite } = useFavoriteTranslations();
 
   // Setup state
   const [apiKeyReady, setApiKeyReady] = useState(hasApiKey());
@@ -62,6 +65,7 @@ export default function App() {
   const [showBookSelector, setShowBookSelector] = useState(false);
   const [showTranslationSelector, setShowTranslationSelector] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Active bookmark tracking (for auto-advance)
   const [activeBookmarkId, setActiveBookmarkId] = useState<string | null>(null);
@@ -139,12 +143,12 @@ export default function App() {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') {
-        if (!showBookSelector && !showBookmarks && !showTranslationSelector) {
+        if (!showBookSelector && !showBookmarks && !showTranslationSelector && !showSettings) {
           e.preventDefault();
           goNext();
         }
       } else if (e.key === 'ArrowLeft') {
-        if (!showBookSelector && !showBookmarks && !showTranslationSelector) {
+        if (!showBookSelector && !showBookmarks && !showTranslationSelector && !showSettings) {
           e.preventDefault();
           goPrev();
         }
@@ -152,11 +156,12 @@ export default function App() {
         setShowBookSelector(false);
         setShowTranslationSelector(false);
         setShowBookmarks(false);
+        setShowSettings(false);
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [goNext, goPrev, showBookSelector, showBookmarks, showTranslationSelector]);
+  }, [goNext, goPrev, showBookSelector, showBookmarks, showTranslationSelector, showSettings]);
 
   const handleBookChapterSelect = (newBookId: string, newChapter: number) => {
     setBookId(newBookId);
@@ -213,6 +218,7 @@ export default function App() {
         onOpenBookSelector={() => setShowBookSelector(true)}
         onOpenTranslationSelector={() => setShowTranslationSelector(true)}
         onOpenBookmarks={() => setShowBookmarks(true)}
+        onOpenSettings={() => setShowSettings(true)}
         isDark={isDark}
         onToggleDark={toggleDark}
       />
@@ -247,9 +253,22 @@ export default function App() {
       {showTranslationSelector && (
         <TranslationSelector
           translations={translations}
+          favoriteIds={favoriteIds}
           current={currentTranslation}
           onSelect={handleTranslationSelect}
+          onOpenSettings={() => setShowSettings(true)}
           onClose={() => setShowTranslationSelector(false)}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsPanel
+          translations={translations}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
+          isDark={isDark}
+          onToggleDark={toggleDark}
+          onClose={() => setShowSettings(false)}
         />
       )}
 

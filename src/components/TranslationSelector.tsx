@@ -2,17 +2,27 @@ import type { BibleTranslation } from '../types';
 
 interface Props {
   translations: BibleTranslation[];
+  favoriteIds: string[];
   current: BibleTranslation | null;
   onSelect: (translation: BibleTranslation) => void;
+  onOpenSettings: () => void;
   onClose: () => void;
 }
 
 export default function TranslationSelector({
   translations,
+  favoriteIds,
   current,
   onSelect,
+  onOpenSettings,
   onClose,
 }: Props) {
+  // Show only favorites if any are set, otherwise show all
+  const displayed =
+    favoriteIds.length > 0
+      ? translations.filter((t) => favoriteIds.includes(t.id))
+      : translations;
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
@@ -38,12 +48,12 @@ export default function TranslationSelector({
         </div>
 
         <div className="p-2">
-          {translations.length === 0 && (
+          {displayed.length === 0 && (
             <p className="text-slate-400 text-sm text-center py-6">
               No translations available. Check your API key.
             </p>
           )}
-          {translations.map((t) => (
+          {displayed.map((t) => (
             <button
               key={t.id}
               onClick={() => onSelect(t)}
@@ -80,6 +90,19 @@ export default function TranslationSelector({
               )}
             </button>
           ))}
+        </div>
+
+        {/* Manage link */}
+        <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+          <button
+            onClick={() => {
+              onClose();
+              onOpenSettings();
+            }}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Manage translations in Settings
+          </button>
         </div>
 
         <div className="h-safe-bottom" />
