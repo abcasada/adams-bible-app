@@ -3,7 +3,8 @@ import type { BibleTranslation, ChapterContent } from '../types';
 
 const API_BASE = 'https://api.scripture.api.bible/v1';
 
-const TARGET_ABBRS = ['ESV', 'CSB', 'NIV', 'KJV', 'NLT'];
+// Preferred translations shown first (if available), then all others
+const PREFERRED_ABBRS = ['ESV', 'CSB', 'NIV', 'KJV', 'NLT'];
 
 function getApiKey(): string {
   return localStorage.getItem('bible-app-api-key') || '';
@@ -37,7 +38,7 @@ async function apiFetch(endpoint: string): Promise<any> {
 }
 
 /**
- * Fetch available translations, filtered to our target set.
+ * Fetch available translations — preferred ones first, then all others.
  * Results are cached in localStorage.
  */
 export async function fetchTranslations(): Promise<BibleTranslation[]> {
@@ -53,23 +54,37 @@ export async function fetchTranslations(): Promise<BibleTranslation[]> {
   const data = await apiFetch('/bibles?language=eng');
   const bibles = data.data as any[];
 
-  const translations: BibleTranslation[] = [];
+  // Build full list of translations
+  const all: BibleTranslation[] = bibles.map((b: any) => ({
+    id: b.id,
+    abbreviation: (b.abbreviationLocal || b.abbreviation || b.id).toUpperCase(),
+    name: b.name || b.nameLocal || b.abbreviation,
+    description: b.description,
+  }));
 
-  for (const abbr of TARGET_ABBRS) {
-    const match = bibles.find(
-      (b: any) =>
-        b.abbreviationLocal?.toUpperCase() === abbr ||
-        b.abbreviation?.toUpperCase() === abbr
-    );
-    if (match) {
-      translations.push({
-        id: match.id,
-        abbreviation: match.abbreviationLocal?.toUpperCase() || abbr,
-        name: match.name,
-        description: match.description,
-      });
+  // Deduplicate by abbreviation (keep first occurrence)
+  const seen = new Set<string>();
+  const unique = all.filter((t) => {
+    if (seen.has(t.abbreviation)) return false;
+    seen.add(t.abbreviation);
+    return true;
+  });
+
+  // Sort: preferred translations first (in order), then alphabetical
+  const preferred: BibleTranslation[] = [];
+  const rest: BibleTranslation[] = [];
+
+  for (const t of unique) {
+    const prefIndex = PREFERRED_ABBRS.indexOf(t.abbreviation);
+    if (prefIndex !== -1) {
+      preferred[prefIndex] = t;
+    } else {
+      rest.push(t);
     }
   }
+
+  rest.sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+  const translations = [...preferred.filter(Boolean), ...rest];
 
   if (translations.length > 0) {
     localStorage.setItem('bible-app-translations', JSON.stringify(translations));
