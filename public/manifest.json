@@ -2,7 +2,7 @@
   "name": "Bible Reader",
   "short_name": "Bible",
   "description": "A fast, simple Bible reading app",
-  "start_url": "/",
+  "start_url": "/adams-bible-app/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#1e40af",
