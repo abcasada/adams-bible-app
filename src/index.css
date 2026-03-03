@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode toggling */
+@variant dark (&:where(.dark, .dark *));
+
+/* Bible content styling — for API.Bible HTML output */
+.bible-content p {
+  margin-bottom: 1em;
+}
+
+.bible-content .v,
+.bible-content [data-number] {
+  font-size: 0.7em;
+  font-weight: 700;
+  vertical-align: super;
+  color: var(--verse-num-color, #6b7280);
+  margin-right: 2px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.bible-content .v:hover,
+.bible-content [data-number]:hover {
+  color: var(--color-blue-500, #3b82f6);
+}
+
+.bible-content .verse-selected {
+  color: var(--color-blue-600, #2563eb) !important;
+  background: var(--verse-highlight-bg, rgba(59, 130, 246, 0.15));
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+/* Dark mode variable overrides */
+.dark {
+  --verse-num-color: #94a3b8;
+  --verse-highlight-bg: rgba(59, 130, 246, 0.25);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Typography for reading */
+.bible-content {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 1.125rem;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+}
+
+@media (min-width: 640px) {
+  .bible-content {
+    font-size: 1.2rem;
+    line-height: 1.9;
+  }
+}
+
+/* Safe area for mobile browsers */
+.h-safe-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent body scroll when modals are open */
+body {
+  margin: 0;
+}
+
